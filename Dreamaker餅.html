@@ -1,66 +1,84 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Nebula Artefact HTML版</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background-color: black;
-    }
-    canvas {
-      display: block;
-    }
-  </style>
+    <title>Dream Particles</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: black;
+            overflow: hidden;
+        }
+    </style>
 </head>
 <body>
-  <canvas id="nebulaCanvas"></canvas>
+    <canvas id="dreamCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('dreamCanvas');
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
 
-  <script>
-    const canvas = document.getElementById('nebulaCanvas');
-    const ctx = canvas.getContext('2d');
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    canvas.width = width;
-    canvas.height = height;
+        // 粒子數組
+        const particles = [];
 
-    // 漸變顏色
-    const gradients = [
-      ['#ff6363', '#ffa143', '#ffd939', '#6af9c3'], // 紅橙黃綠
-      ['#6d76ff', '#49e0ff', '#6affc3', '#ff9ad3'], // 藍青綠紫
-      ['#b32cf9', '#c45aff', '#beaeff', '#f7d3ff']  // 紫色漸變
-    ];
+        // 粒子對象
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = Math.random() * 2 - 1;
+                this.vy = Math.random() * 2 - 1;
+                this.radius = Math.random() * 3 + 1;
+                this.color = `hsl(${Math.random() * 360}, 80%, 60%)`;
+            }
 
-    // 隨機選擇漸變顏色
-    const gradient = gradients[Math.floor(Math.random() * gradients.length)];
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
 
-    // 創建漸變
-    const grd = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, Math.max(width, height));
-    gradient.forEach((color, i) => {
-      grd.addColorStop(i / gradient.length, color);
-    });
+                if (this.x < 0 || this.x > width) this.vx = -this.vx;
+                if (this.y < 0 || this.y > height) this.vy = -this.vy;
+            }
 
-    // 繪製漸變背景
-    ctx.fillStyle = grd;
-    ctx.fillRect(0, 0, width, height);
+            draw() {
+                ctx.beginPath();
+                ctx.fillStyle = this.color;
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
 
-    // 添加噪聲紋理
-    const noise = () => Math.random() * 2 - 1;
-    const noiseCanvas = document.createElement('canvas');
-    const noiseCtx = noiseCanvas.getContext('2d');
-    noiseCanvas.width = 200;
-    noiseCanvas.height = 200;
-    for (let x = 0; x < noiseCanvas.width; x++) {
-      for (let y = 0; y < noiseCanvas.height; y++) {
-        noiseCtx.fillStyle = `rgba(0,0,0,${noise() * 0.2 + 0.3})`;
-        noiseCtx.fillRect(x, y, 1, 1);
-      }
-    }
-    const noisePattern = ctx.createPattern(noiseCanvas, 'repeat');
+        // 繪製函數
+        function draw() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, width, height);
 
-    // 繪製霧狀紋理
-    ctx.fillStyle = noisePattern;
-    ctx.fillRect(0, 0, width, height);
-  </script>
+            for (let i = 0; i < particles.length; i++) {
+                const p = particles[i];
+                p.update();
+                p.draw();
+            }
+
+            requestAnimationFrame(draw);
+        }
+
+        // 初始化
+        function init() {
+            for (let i = 0; i < 500; i++) {
+                particles.push(new Particle());
+            }
+            draw();
+        }
+
+        init();
+
+        // 調整視口大小
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            init();
+        });
+    </script>
 </body>
 </html>
