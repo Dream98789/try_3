@@ -8,19 +8,36 @@
             padding: 0;
             background-color: black;
             overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        #dreamText {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+            opacity: 0.8;
+            user-select: none;
         }
     </style>
 </head>
 <body>
     <canvas id="dreamCanvas"></canvas>
+    <div id="dreamText">Dreamaker</div>
     <script>
         const canvas = document.getElementById('dreamCanvas');
         const ctx = canvas.getContext('2d');
         let width = canvas.width = window.innerWidth;
         let height = canvas.height = window.innerHeight;
+        const textEl = document.getElementById('dreamText');
 
         // 粒子數組
         const particles = [];
+
+        // 文字粒子數組
+        const textParticles = [];
 
         // 粒子對象
         class Particle {
@@ -60,14 +77,42 @@
                 p.draw();
             }
 
+            for (let i = 0; i < textParticles.length; i++) {
+                const p = textParticles[i];
+                p.update();
+                p.draw();
+            }
+
             requestAnimationFrame(draw);
         }
 
         // 初始化
         function init() {
+            particles.length = 0;
+            textParticles.length = 0;
+
             for (let i = 0; i < 500; i++) {
                 particles.push(new Particle());
             }
+
+            const text = textEl.textContent;
+            const textWidth = textEl.offsetWidth;
+            const textHeight = textEl.offsetHeight;
+            const textX = textEl.offsetLeft + textWidth / 2;
+            const textY = textEl.offsetTop + textHeight / 2;
+
+            for (let y = 0; y < textHeight; y += 4) {
+                for (let x = 0; x < textWidth; x += 4) {
+                    if (ctx.isPointInPath(text, x, y)) {
+                        const px = x + textX - textWidth / 2;
+                        const py = y + textY - textHeight / 2;
+                        const vx = (px - width / 2) / 100;
+                        const vy = (py - height / 2) / 100;
+                        textParticles.push(new Particle(px, py, vx, vy));
+                    }
+                }
+            }
+
             draw();
         }
 
@@ -79,6 +124,32 @@
             height = canvas.height = window.innerHeight;
             init();
         });
+
+        // 文字爆炸動畫
+        let explodeInterval;
+        const explodeText = () => {
+            clearInterval(explodeInterval);
+            explodeInterval = setInterval(() => {
+                textParticles.forEach(p => {
+                    p.vx += (Math.random() * 4 - 2);
+                    p.vy += (Math.random() * 4 - 2);
+                });
+            }, 50);
+
+            setTimeout(() => {
+                clearInterval(explodeInterval);
+                textParticles.forEach(p => {
+                    const dx = p.x - width / 2;
+                    const dy = p.y - height / 2;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    p.vx = -dx / dist;
+                    p.vy = -dy / dist;
+                });
+            }, 2000);
+        };
+
+        explodeText();
+        setInterval(explodeText, 5000);
     </script>
 </body>
 </html>
